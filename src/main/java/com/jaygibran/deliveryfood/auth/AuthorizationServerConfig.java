@@ -35,6 +35,11 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
                     .accessTokenValiditySeconds(6 * 60 * 60)
                     .refreshTokenValiditySeconds(60 * 24 * 60 *60)
                 .and()
+                    .withClient("billing")
+                    .secret(passwordEncoder.encode("billing123"))
+                    .authorizedGrantTypes("client_credentials")
+                    .scopes("write", "read")
+                .and()
                     .withClient("checktoken")
                         .secret(passwordEncoder.encode("check123"));
     }
