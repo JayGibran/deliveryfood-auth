@@ -26,9 +26,12 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
         clients
                 .inMemory()
                     .withClient("deliveryfood-web")
-                    .secret(passwordEncoder.encode("123"))
+                    .secret(passwordEncoder.encode("web123"))
                     .authorizedGrantTypes("password")
-                    .scopes("write", "read");
+                    .scopes("write", "read")
+                .and()
+                    .withClient("checktoken")
+                        .secret(passwordEncoder.encode("check123"));
     }
 
     @Override
