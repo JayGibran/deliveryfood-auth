@@ -1,6 +1,7 @@
 package com.jaygibran.deliveryfood.auth;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,6 +10,13 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.CompositeTokenGranter;
+import org.springframework.security.oauth2.provider.TokenGranter;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+
+
+import java.util.Arrays;
 
 @Configuration
 @EnableAuthorizationServer
@@ -17,11 +25,13 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final RedisConnectionFactory redisConnectionFactory;
 
-    public AuthorizationServerConfig(PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, UserDetailsService userDetailsService) {
+    public AuthorizationServerConfig(PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, UserDetailsService userDetailsService, RedisConnectionFactory redisConnectionFactory) {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
+        this.redisConnectionFactory = redisConnectionFactory;
     }
 
     @Override
@@ -41,7 +51,7 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
                     .redirectUris("http://client-application")
                 .and()
                     .withClient("deliveryfoodanalytics")
-                    .secret(passwordEncoder.encode("food123"))
+                    .secret(passwordEncoder.encode(""))
                     .authorizedGrantTypes("authorization_code")
                     .scopes("write", "read")
                     .redirectUris("http://client-application")
@@ -52,18 +62,38 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
                     .scopes("write", "read")
                 .and()
                     .withClient("checktoken")
-                        .secret(passwordEncoder.encode("check123"));
+                    .secret(passwordEncoder.encode("check123"));
     }
 
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-        security.checkTokenAccess("isAuthenticated()");
+//        security.checkTokenAccess("isAuthenticated()");
+        security.checkTokenAccess("permitAll()")
+                .allowFormAuthenticationForClients();
     }
 
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints)  {
         endpoints.authenticationManager(authenticationManager)
                 .userDetailsService(userDetailsService)
-                .reuseRefreshTokens(false);
+                .reuseRefreshTokens(false)
+                .tokenStore(redisTokenStore())
+                .tokenGranter(tokenGranter(endpoints));
+    }
+    
+    
+    private TokenStore redisTokenStore(){
+      return new RedisTokenStore(redisConnectionFactory);
+    }
+    
+    private TokenGranter tokenGranter(AuthorizationServerEndpointsConfigurer endpoints) {
+        var pkceAuthorizationCodeTokenGranter = new PkceAuthorizationCodeTokenGranter(endpoints.getTokenServices(),
+                endpoints.getAuthorizationCodeServices(), endpoints.getClientDetailsService(),
+                endpoints.getOAuth2RequestFactory());
+
+        var granters = Arrays.asList(
+                pkceAuthorizationCodeTokenGranter, endpoints.getTokenGranter());
+
+        return new CompositeTokenGranter(granters);
     }
 }
