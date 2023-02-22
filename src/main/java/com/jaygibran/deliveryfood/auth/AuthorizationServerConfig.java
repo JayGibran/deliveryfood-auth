@@ -2,6 +2,7 @@ package com.jaygibran.deliveryfood.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,9 +16,11 @@ import org.springframework.security.oauth2.provider.CompositeTokenGranter;
 import org.springframework.security.oauth2.provider.TokenGranter;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 
+import java.security.KeyPair;
 import java.util.Arrays;
 
 @Configuration
@@ -86,8 +89,16 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
     @Bean
     public JwtAccessTokenConverter jwtAccessTokenConverter(){
         JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
-        jwtAccessTokenConverter.setSigningKey("deliveryfood");
+//        jwtAccessTokenConverter.setSigningKey("CSL5ky0PddTcjyGiukkmiAYN28RHKjPnC8uqO_Q_6pI");
         
+        var jksResource = new ClassPathResource("keystores/deliveryfood.jks");
+        var keyStorePass = "123456";
+        var keyPairAlias = "deliveryfood";
+        var keyStoreKeyFactory = new KeyStoreKeyFactory(jksResource, keyStorePass.toCharArray());
+        var keyPair = keyStoreKeyFactory.getKeyPair(keyPairAlias);
+        
+        jwtAccessTokenConverter.setKeyPair(keyPair);
+
         return jwtAccessTokenConverter;
     }
     
