@@ -14,13 +14,10 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.CompositeTokenGranter;
 import org.springframework.security.oauth2.provider.TokenGranter;
-import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
-import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 
-import java.security.KeyPair;
 import java.util.Arrays;
 
 @Configuration
@@ -31,12 +28,15 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final RedisConnectionFactory redisConnectionFactory;
-
-    public AuthorizationServerConfig(PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, UserDetailsService userDetailsService, RedisConnectionFactory redisConnectionFactory) {
+    
+    private final JwtKeyStoreProperties jwtKeyStoreProperties;
+    
+    public AuthorizationServerConfig(PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, UserDetailsService userDetailsService, RedisConnectionFactory redisConnectionFactory, JwtKeyStoreProperties jwtKeyStoreProperties) {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.redisConnectionFactory = redisConnectionFactory;
+        this.jwtKeyStoreProperties = jwtKeyStoreProperties;
     }
 
     @Override
@@ -91,9 +91,9 @@ public class AuthorizationServerConfig  extends AuthorizationServerConfigurerAda
         JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
 //        jwtAccessTokenConverter.setSigningKey("CSL5ky0PddTcjyGiukkmiAYN28RHKjPnC8uqO_Q_6pI");
         
-        var jksResource = new ClassPathResource("keystores/deliveryfood.jks");
-        var keyStorePass = "123456";
-        var keyPairAlias = "deliveryfood";
+        var jksResource = new ClassPathResource(jwtKeyStoreProperties.getPath());
+        var keyStorePass = jwtKeyStoreProperties.getPass();
+        var keyPairAlias = jwtKeyStoreProperties.getAlias();
         var keyStoreKeyFactory = new KeyStoreKeyFactory(jksResource, keyStorePass.toCharArray());
         var keyPair = keyStoreKeyFactory.getKeyPair(keyPairAlias);
         
