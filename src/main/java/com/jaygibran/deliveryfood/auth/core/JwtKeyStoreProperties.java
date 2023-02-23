@@ -1,4 +1,4 @@
-package com.jaygibran.deliveryfood.auth;
+package com.jaygibran.deliveryfood.auth.core;
 
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
