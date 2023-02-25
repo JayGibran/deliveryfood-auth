@@ -1,11 +1,7 @@
 package com.jaygibran.deliveryfood.auth.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,29 +11,26 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import java.time.OffsetDateTime;
+import javax.persistence.Table;
 import java.util.List;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@EqualsAndHashCode
 @Data
 @Entity
-public class User {
+@Table(name = "group_")
+public class Group {
 
     @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
-    private String email;
-
-    private String password;
-
     @ManyToMany
-    @JoinTable(joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "group_id"), name = "user_group")
-    private List<Group> groups;
+    @JoinTable(name = "group_permission",
+            joinColumns = @JoinColumn(name = "group_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id"))
+    private List<Permission> permissions;
 }
